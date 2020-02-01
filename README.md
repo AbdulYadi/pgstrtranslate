@@ -19,7 +19,7 @@ CREATE OR REPLACE FUNCTION public.pgstrtranslate(
   LANGUAGE c IMMUTABLE STRICT;
 ~~~
 
-How it works:
+## How it works:
 
 ### Non-recursive replacement:
 ~~~
