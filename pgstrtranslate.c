@@ -174,10 +174,12 @@ static void pgstrtranslate_token_crunch(pgstrtranslate_token* ptoken, const char
 			tkn->solved = true;
 			run = p + strlen(search);
 		} else {
-			idx = ptoken->tokencount++;
-			pgstrtranslate_token_enlarge(ptoken);
-			tkn = &ptoken->tokenarr[idx];
-			pgstrtranslate_token_init(tkn, pstrdup(run));
+			if( run > ptoken->s ) {	
+				idx = ptoken->tokencount++;
+				pgstrtranslate_token_enlarge(ptoken);
+				tkn = &ptoken->tokenarr[idx];
+				pgstrtranslate_token_init(tkn, pstrdup(run));
+			}
 		}
 	} while( p!=NULL );
 	
@@ -205,6 +207,8 @@ static char* pgstrtranslate_token_compose(pgstrtranslate_token *ptoken) {
 		appendStringInfoString(&buff, s);
 		pfree(s);
 	}
+	
+	pfree(ptoken->tokenarr);
 
 	return buff.data;
 }
