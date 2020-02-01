@@ -31,6 +31,7 @@ select pgstrtranslate(false, --non-recursive
 --------------
  012cd3hijkl
 ~~~
+'<b>ab</b>cd<b>efg</b>hijkl' -> '<b>012</b>cd<b>3</b>hijkl'<br />
 Note that '2cd' does not match original string.
 
 ### Recursive replacement:
@@ -43,9 +44,9 @@ select pgstrtranslate(true, --recursive
 --------------
  01783hijkl
 ~~~
-Replace 'ab' with '012': 'abcdefghijkl' -> '012cdefghijkl'<br />
-Replace 'efg' with '3': '012cdefghijkl' -> '012cd3hijkl'<br />
-Replace '2cd' with '78': '012cd3hijkl' -> '01783hijkl'<br />
+Replace 'ab' with '012': '<b>ab</b>cdefghijkl' -> '<b>012</b>cdefghijkl'<br />
+Replace 'efg' with '3': '012cd<b>efg</b>hijkl' -> '012cd<b>3</b>hijkl'<br />
+Replace '2cd' with '78': '01<b>2cd</b>3hijkl' -> '01<b>78</b>3hijkl'<br />
 
 ## How to install
 1. Clone or download source code from https://github.com/AbdulYadi/pgstrtranslate.git. Extract it.
