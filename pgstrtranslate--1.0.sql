@@ -4,3 +4,7 @@
 CREATE OR REPLACE FUNCTION pgstrtranslate(fullsearch boolean, t text, search text[], replacement text[])
 RETURNS text
 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION pgstrarrayremove(search text[], remove text[])
+RETURNS text[]
+AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;

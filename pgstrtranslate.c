@@ -11,6 +11,9 @@ PG_MODULE_MAGIC;
 PG_FUNCTION_INFO_V1(pgstrtranslate);
 Datum pgstrtranslate(PG_FUNCTION_ARGS);
 
+PG_FUNCTION_INFO_V1(pgstrarrayremove);
+Datum pgstrarrayremove(PG_FUNCTION_ARGS);
+
 static void pgstrtranslate_fullsearch(char **t, int search_count,
 	const bool *search_nulls, const bool *replacement_nulls,
 	const Datum *search_datums, const Datum *replacement_datums);
@@ -42,7 +45,7 @@ pgstrtranslate(PG_FUNCTION_ARGS)
 	int sdims, rdims;
 	Datum *search_datums, *replacement_datums;
 	bool *search_nulls, *replacement_nulls;
-	int search_count, replacement_count;//, i;
+	int search_count, replacement_count;
 	text *t;	
 	text *result;	
 	char *c;
@@ -52,13 +55,13 @@ pgstrtranslate(PG_FUNCTION_ARGS)
 	
 	search_arr = PG_GETARG_ARRAYTYPE_P(2);
 	sdims = ARR_NDIM(search_arr);
-
+ 
 	if(strlen(c)>0 && sdims>0) {
 		fullsearch = PG_GETARG_BOOL(0);		
 		replacement_arr = PG_GETARG_ARRAYTYPE_P(3);
 				
 		rdims = ARR_NDIM(replacement_arr);
-		if (sdims != rdims)
+		if(sdims>1 || sdims!=rdims)
 			ereport(ERROR,
 					(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
 					 errmsg("/*both search and replacement should be one dimension array*/")));
@@ -229,4 +232,84 @@ static void pgstrtranslate_token_enlarge(pgstrtranslate_token *ptoken) {
 			: (pgstrtranslate_token*)repalloc((void*)ptoken->tokenarr, ptoken->chunksize * sizeof(pgstrtranslate_token));
 	}
 	return;
+}
+
+Datum
+pgstrarrayremove(PG_FUNCTION_ARGS)
+{
+	ArrayType *search_arr, *remove_arr;
+	int sdims, rdims;
+	Datum *search_datums, *remove_datums, *rsltdatums;
+	bool *search_nulls, *remove_nulls, *rsltnulls;
+	ArrayType  *rslt;
+	int search_count, remove_count, i, j, count;
+    int dims[1];
+    int lbs[1];
+	char *s, **removes;
+	bool hit;
+			
+	search_arr = PG_GETARG_ARRAYTYPE_P(0);
+	sdims = ARR_NDIM(search_arr);
+	rslt = search_arr;
+	
+	if( sdims>0 ) {
+		remove_arr = PG_GETARG_ARRAYTYPE_P(1);
+		rdims = ARR_NDIM(remove_arr);
+		if(sdims>1 || sdims!=rdims)
+			ereport(ERROR,
+				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+				 errmsg("/*both search and replacement should be one dimension array*/")));		
+	
+		deconstruct_array(search_arr,
+			TEXTOID, -1, false, 'i',
+			&search_datums, &search_nulls, &search_count);
+
+		deconstruct_array(remove_arr,
+			TEXTOID, -1, false, 'i',
+			&remove_datums, &remove_nulls, &remove_count);
+			
+		if( search_count>0 && remove_count>0 ) {
+			rsltdatums = (Datum *) palloc(sizeof(Datum) * search_count);
+			rsltnulls = (bool *) palloc(sizeof(bool) * search_count);
+			count = 0;
+			removes = NULL;
+			for(i=0;i<search_count;i++) {	
+				if(search_nulls[i]){
+					rsltnulls[count] = true;	
+					rsltdatums[count] = search_datums[i];
+					count++;
+				} else {					
+					if( removes==NULL ) {
+						removes = (char**)palloc(remove_count*sizeof(char*));
+						for(j=0;j<remove_count;j++) {
+							if(remove_nulls[i])
+								removes[j]=NULL;
+							else
+								removes[j]=TextDatumGetCString(remove_datums[j]);
+						}
+					}
+					hit = false;	
+					s = TextDatumGetCString(search_datums[i]);				
+					for(j=0;j<remove_count;j++) {
+						if(removes[j]!=NULL) {
+							hit = strcmp(s, removes[j])==0;
+							if(hit)
+								break;
+						}
+					}
+					if(!hit) {
+						rsltnulls[count] = false;	
+						rsltdatums[count] = search_datums[i];
+						count++;
+					}
+				}//if!(search_nulls[i]){
+			}//for(i=0;i<search_count;i++) {		
+
+			dims[0] = count;
+			lbs[0] = 1;			
+			rslt = construct_md_array(rsltdatums, rsltnulls, 1, dims, lbs, TEXTOID, -1, false, 'i');
+		}//if( search_count>0 && remove_count>0 ) {
+	} //if( sdims>0 )		
+	
+	PG_RETURN_POINTER(rslt);
 }
