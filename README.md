@@ -23,7 +23,10 @@ How it works:
 
 ### Non-recursive replacement:
 ~~~
-select pgstrtranslate(false, 'abcdefghijkl', array['ab', 'efg', '2cd']::text[], array['012', '3', '78']::text[]);
+select pgstrtranslate(false, --non-recursive
+	'abcdefghijkl', --original string
+	array['ab', 'efg', '2cd']::text[], --array of searchs
+	array['012', '3', '78']::text[]); --array of replacement
   translate   
 --------------
  012cd3hijkl
@@ -32,7 +35,10 @@ Note that '2cd' does not match original string.
 
 ### Recursive replacement:
 ~~~
-select pgstrtranslate(true, 'abcdefghijkl', array['ab', 'efg', '2cd']::text[], array['012', '3', '78']::text[]);
+select pgstrtranslate(true, --recursive
+	'abcdefghijkl', --original string
+	array['ab', 'efg', '2cd']::text[], --array of searchs
+	array['012', '3', '78']::text[]); --array of replacement
   translate   
 --------------
  01783hijkl
