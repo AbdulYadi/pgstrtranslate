@@ -10,7 +10,7 @@ select translate('abcdefghijkl', 'ace', '123');
 <b>pgstrtranslate</b> extends it with multi-character replacement. It takes 4 arguments and returning a text.
 ~~~
 CREATE OR REPLACE FUNCTION public.pgstrtranslate(
-    recursive boolean,
+    fullsearch boolean,
     t text,
     search text[],
     replacement text[])
@@ -21,9 +21,9 @@ CREATE OR REPLACE FUNCTION public.pgstrtranslate(
 
 ## How it works:
 
-### Non-recursive replacement:
+### Non-fullsearch replacement:
 ~~~
-select pgstrtranslate(false, --non-recursive
+select pgstrtranslate(false, --non-fullsearch
 	'abcdefghijkl', --original string
 	array['ab', 'efg', '2cd']::text[], --array of searchs
 	array['012', '3', '78']::text[]); --array of replacement
@@ -34,9 +34,9 @@ select pgstrtranslate(false, --non-recursive
 '<b>ab</b>cd<b>efg</b>hijkl' -> '<b>012</b>cd<b>3</b>hijkl'<br />
 Note that '2cd' does not match original string.
 
-### Recursive replacement:
+### Fullsearch replacement:
 ~~~
-select pgstrtranslate(true, --recursive
+select pgstrtranslate(true, --fullsearch
 	'abcdefghijkl', --original string
 	array['ab', 'efg', '2cd']::text[], --array of searchs
 	array['012', '3', '78']::text[]); --array of replacement

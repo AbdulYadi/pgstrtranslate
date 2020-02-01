@@ -11,7 +11,7 @@ PG_MODULE_MAGIC;
 PG_FUNCTION_INFO_V1(pgstrtranslate);
 Datum pgstrtranslate(PG_FUNCTION_ARGS);
 
-static void pgstrtranslate_recursive(char **t, int search_count,
+static void pgstrtranslate_fullsearch(char **t, int search_count,
 	const bool *search_nulls, const bool *replacement_nulls,
 	const Datum *search_datums, const Datum *replacement_datums);
 
@@ -37,7 +37,7 @@ static void pgstrtranslate_token_enlarge(pgstrtranslate_token *ptoken);
 Datum
 pgstrtranslate(PG_FUNCTION_ARGS)
 {
-	bool recursive;
+	bool fullsearch;
 	ArrayType *search_arr, *replacement_arr;
 	int sdims, rdims;
 	Datum *search_datums, *replacement_datums;
@@ -54,7 +54,7 @@ pgstrtranslate(PG_FUNCTION_ARGS)
 	sdims = ARR_NDIM(search_arr);
 
 	if(strlen(c)>0 && sdims>0) {
-		recursive = PG_GETARG_BOOL(0);		
+		fullsearch = PG_GETARG_BOOL(0);		
 		replacement_arr = PG_GETARG_ARRAYTYPE_P(3);
 				
 		rdims = ARR_NDIM(replacement_arr);
@@ -75,8 +75,8 @@ pgstrtranslate(PG_FUNCTION_ARGS)
 			ereport(ERROR,
 					(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
 					 errmsg("/*mismatched array dimensions*/")));	
-		if( recursive )
-			pgstrtranslate_recursive(&c, search_count, search_nulls, replacement_nulls, search_datums, replacement_datums);
+		if( fullsearch )
+			pgstrtranslate_fullsearch(&c, search_count, search_nulls, replacement_nulls, search_datums, replacement_datums);
 		else
 			pgstrtranslate_distinct(&c, search_count, search_nulls, replacement_nulls, search_datums, replacement_datums);
 	} //if(strlen(c)>0)	
@@ -84,7 +84,7 @@ pgstrtranslate(PG_FUNCTION_ARGS)
 	PG_RETURN_TEXT_P(result);
 }
 
-static void pgstrtranslate_recursive(char **t, int search_count,
+static void pgstrtranslate_fullsearch(char **t, int search_count,
 	const bool *search_nulls, const bool *replacement_nulls,
 	const Datum *search_datums, const Datum *replacement_datums) {
 	
