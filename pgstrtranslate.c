@@ -55,12 +55,13 @@ pgstrtranslate(PG_FUNCTION_ARGS)
 	
 	search_arr = PG_GETARG_ARRAYTYPE_P(2);
 	sdims = ARR_NDIM(search_arr);
- 
-	if(strlen(c)>0 && sdims>0) {
+
+	replacement_arr = PG_GETARG_ARRAYTYPE_P(3);
+	rdims = ARR_NDIM(replacement_arr);
+
+	if(strlen(c)>0 && sdims>0 && rdims>0) {
 		fullsearch = PG_GETARG_BOOL(0);		
-		replacement_arr = PG_GETARG_ARRAYTYPE_P(3);
-				
-		rdims = ARR_NDIM(replacement_arr);
+	
 		if(sdims>1 || sdims!=rdims)
 			ereport(ERROR,
 					(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
@@ -250,11 +251,13 @@ pgstrarrayremove(PG_FUNCTION_ARGS)
 			
 	search_arr = PG_GETARG_ARRAYTYPE_P(0);
 	sdims = ARR_NDIM(search_arr);
+
+	remove_arr = PG_GETARG_ARRAYTYPE_P(1);
+	rdims = ARR_NDIM(remove_arr);
+	
 	rslt = search_arr;
 	
-	if( sdims>0 ) {
-		remove_arr = PG_GETARG_ARRAYTYPE_P(1);
-		rdims = ARR_NDIM(remove_arr);
+	if(sdims>0 && rdims>0) {
 		if(sdims>1 || sdims!=rdims)
 			ereport(ERROR,
 				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
