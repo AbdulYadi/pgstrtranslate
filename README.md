@@ -7,7 +7,7 @@ select translate('abcdefghijkl', 'ace', '123');
  1b2d3fghijkl
 ~~~
 
-<b>pgstrtranslate</b> extends it with multi-character replacement. It takes 4 arguments and returning text.
+<b>pgstrtranslate</b> extends it with multi-character replacement. It takes 4 arguments and returning a text.
 ~~~
 CREATE OR REPLACE FUNCTION public.pgstrtranslate(
     recursive boolean,
